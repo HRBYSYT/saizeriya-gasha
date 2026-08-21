@@ -25,11 +25,19 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
 
-        h1 { color: #e60012; font-size: 28px; margin-top: 0; }
+        /* ロゴ画像のスタイル */
+        .logo {
+            display: block;
+            margin: 0 auto 10px auto; /* 中央寄せし、下のテキストとの隙間を少しあける */
+            max-width: 250px; /* ロゴの大きさに合わせて調整可能です */
+            width: 100%;
+        }
+
+        h1 { color: #e60012; font-size: 28px; margin-top: 0; margin-bottom: 20px; }
         
         /* 金額入力エリアのデザイン */
         .input-area {
-            margin: 20px 0;
+            margin: 0 0 20px 0;
             font-size: 18px;
             font-weight: bold;
         }
@@ -207,8 +215,12 @@
 <body>
 
     <div class="container">
+        <!-- ロゴ画像を一番上に配置 -->
+        <img src="logo.webp" alt="サイゼリヤロゴ" class="logo">
+        
         <h1>サイゼリヤガチャ<br>~2026.08現在~</h1>
-        <p>予算内でメニューを選びます</p>
+        
+        <!-- 「予算内でメニューを選びます」の文言は削除しました -->
         
         <div class="input-area">
             予算: <input type="number" id="targetAmount" value="1000" step="10"> 円
