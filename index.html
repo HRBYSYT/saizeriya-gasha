@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <!-- スマホでの意図しない拡大を防止 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>サイゼリヤガチャ</title>
     <style>
@@ -93,14 +94,29 @@
             text-align: left; 
         }
         
-        /* 1つのメニュー行のデザイン */
+        /* 1つのメニュー行のデザイン（全体を縦並びに） */
         .item { 
             display: flex; 
-            align-items: center; 
+            flex-direction: column; /* 縦方向に並べる */
             border-bottom: 1px dashed #ccc; 
             padding: 12px 0; 
+            gap: 6px; /* 行間のすき間 */
         }
         
+        /* 上段：IDと栄養素の行 */
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 下段：メニュー名と値段の行 */
+        .item-main {
+            display: flex;
+            justify-content: space-between; /* 左右に振り分ける */
+            align-items: flex-start;
+        }
+
         /* 注文番号 */
         .item-id {
             background-color: #fff200; 
@@ -110,54 +126,23 @@
             font-size: 12px;
             font-weight: bold;
             border-radius: 4px;
-            margin-right: 10px;
             min-width: 35px;
             text-align: center;
-            flex-shrink: 0; 
         }
-
-        /* メニュー名 */
-        .item-name {
-            flex-grow: 1;
-            font-weight: bold;
-            font-size: 15px;
-            white-space: nowrap; 
-            overflow: hidden; 
-            margin-right: 5px;
-        }
-
-        /* 更新ボタン用のテキスト */
-        .swap-text {
-            font-size: 10px;
-            color: #e60012;
-            margin-right: 2px;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
-
-        /* 更新ボタン (2419/2417用) */
-        .swap-btn {
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-right: 8px;
-            padding: 2px 4px;
-            flex-shrink: 0;
-            transition: background-color 0.2s;
-        }
-        .swap-btn:hover { background-color: #e0e0e0; }
-        .swap-btn:active { background-color: #d0d0d0; transform: scale(0.95); }
 
         /* 栄養素（カロリー・塩分） */
         .item-nut {
             font-size: 12px;
             color: #666;
-            margin-right: 15px;
-            text-align: right;
-            white-space: nowrap;
-            flex-shrink: 0; 
+        }
+
+        /* メニュー名 */
+        .item-name {
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.4;
+            white-space: normal; /* スマホで文字が長い場合は折り返す */
+            padding-right: 10px;
         }
 
         /* 値段 */
@@ -168,6 +153,32 @@
             font-weight: bold;
             flex-shrink: 0; 
         }
+
+        /* 更新ボタンのエリア */
+        .swap-area {
+            text-align: right;
+            margin-top: 2px;
+        }
+
+        /* 更新ボタン用のテキスト */
+        .swap-text {
+            font-size: 10px;
+            color: #e60012;
+            margin-right: 2px;
+        }
+
+        /* 更新ボタン (2419/2417用) */
+        .swap-btn {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 4px;
+            transition: background-color 0.2s;
+        }
+        .swap-btn:hover { background-color: #e0e0e0; }
+        .swap-btn:active { background-color: #d0d0d0; transform: scale(0.95); }
 
         .total-box { 
             font-size: 24px; 
@@ -194,7 +205,6 @@
         <p>設定した金額以内でランダムにメニューを選びます</p>
         
         <div class="input-area">
-            <!-- step="10" を追加し、10円単位で動くようにしました -->
             予算: <input type="number" id="targetAmount" value="1000" step="10"> 円
         </div>
 
@@ -296,7 +306,6 @@
             { id: "2328", name: "イカの墨入りセピアソース", price: 500, category: "パスタ", cal: 609, salt: 2.4 },
 
             // 肉料理
-            // メニュー名から注釈を外してスッキリさせました
             { id: "2402", name: "若鶏のディアボラ風", price: 500, category: "肉料理", cal: 765, salt: 2.7 },
             { id: "2403", name: "イタリアンハンバーグ", price: 500, category: "肉料理", cal: 632, salt: 3.0 },
             { id: "2404", name: "柔らかチキンのチーズ焼き", price: 500, category: "肉料理", cal: 810, salt: 3.1 },
@@ -453,19 +462,27 @@
                         : `- kcal / - g`;
 
                     // 2419 または 2417 の場合のみ更新ボタンを追加
-                    // 文字の大きさが他の要素に影響されないよう、独立した<span>に分離しました
                     let swapBtnHtml = "";
                     if (item.id === "2419" || item.id === "2417") {
-                        swapBtnHtml = `<span class="swap-text">※メニューがない場合は更新→</span><button class="swap-btn" onclick="swapItem(${index})" title="別のお肉に変更">🔄</button>`;
+                        swapBtnHtml = `
+                            <div class="swap-area">
+                                <span class="swap-text">※メニューがない場合は更新→</span>
+                                <button class="swap-btn" onclick="swapItem(${index})" title="別のお肉に変更">🔄</button>
+                            </div>
+                        `;
                     }
 
                     html += `
                         <div class="item">
-                            <span class="item-id">${item.id}</span>
-                            <span class="item-name">${item.name}</span>
+                            <div class="item-info">
+                                <span class="item-id">${item.id}</span>
+                                <span class="item-nut">${nutText}</span>
+                            </div>
+                            <div class="item-main">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-price">${item.price}円</span>
+                            </div>
                             ${swapBtnHtml}
-                            <span class="item-nut">${nutText}</span>
-                            <span class="item-price">${item.price}円</span>
                         </div>
                     `;
                 });
@@ -477,25 +494,6 @@
                      </div>`;
             
             resultDiv.innerHTML = html;
-            
-            // HTMLを描画した直後にフォントサイズ調整関数を呼び出す
-            adjustFontSize();
-        }
-
-        // --- 文字サイズを自動で縮小する関数 ---
-        function adjustFontSize() {
-            const itemNames = document.querySelectorAll('.item-name');
-            
-            itemNames.forEach(el => {
-                let fontSize = 15; // デフォルトのフォントサイズ
-                el.style.fontSize = fontSize + 'px';
-                
-                // 要素の実際の幅(scrollWidth)が表示領域(clientWidth)を超える場合、文字を少しずつ小さくする
-                while (el.scrollWidth > el.clientWidth && fontSize > 9) { 
-                    fontSize -= 0.5;
-                    el.style.fontSize = fontSize + 'px';
-                }
-            });
         }
     </script>
 
