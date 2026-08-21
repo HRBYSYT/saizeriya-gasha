@@ -106,8 +106,8 @@
         .item-info {
             display: flex;
             align-items: center;
-            gap: 10px;
-            width: 100%; /* 横幅いっぱいにする */
+            gap: 6px; /* 隙間を少し詰めてスペースを確保 */
+            width: 100%; 
         }
 
         /* 下段：メニュー名と値段の行 */
@@ -132,8 +132,9 @@
 
         /* 栄養素（カロリー・塩分） */
         .item-nut {
-            font-size: 12px;
+            font-size: 11px; /* 12pxから少し縮小 */
             color: #666;
+            white-space: nowrap; /* ⚠️勝手に改行させない */
         }
 
         /* メニュー名 */
@@ -163,9 +164,10 @@
 
         /* 更新ボタン用のテキスト */
         .swap-text {
-            font-size: 10px;
+            font-size: 9px; /* 文字を小さく調整 */
             color: #e60012;
             margin-right: 2px;
+            white-space: nowrap; /* ⚠️勝手に改行させない */
         }
 
         /* 更新ボタン (2419/2417用) */
@@ -473,7 +475,7 @@
                         `;
                     }
 
-                    // ★ HTMLの組み立て部分：item-info の中に swapBtnHtml を移動しました
+                    // HTMLの組み立て部分
                     html += `
                         <div class="item">
                             <div class="item-info">
