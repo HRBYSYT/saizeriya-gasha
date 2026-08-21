@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サイゼリヤガチャ</title>
+    <style>
+        /* 背景色をサイゼリヤ風の緑色に変更 */
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            text-align: center; 
+            background-color: #006837; /* サイゼリヤ風グリーン */
+            color: #333; 
+            padding: 20px; 
+            margin: 0;
+        }
+        
+        /* 全体を囲む白いパネル */
+        .container {
+            background-color: #ffffff;
+            max-width: 550px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        h1 { color: #e60012; font-size: 28px; margin-top: 0; }
+        
+        /* 金額入力エリアのデザイン */
+        .input-area {
+            margin: 20px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #targetAmount {
+            font-size: 20px;
+            padding: 5px 10px;
+            width: 120px;
+            text-align: right;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            margin: 0 10px;
+        }
+
+        /* カテゴリー選択エリアのデザイン（縦並び） */
+        .category-area {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 0 auto 20px auto;
+            text-align: left;
+            max-width: 300px;
+            height: 200px; 
+            overflow-y: auto;
+        }
+
+        .category-area label {
+            display: block; 
+            margin-bottom: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .category-area input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2); 
+        }
+
+        .gacha-btn { 
+            background-color: #e60012;
+            color: white; 
+            border: none; 
+            padding: 15px 40px; 
+            font-size: 20px; 
+            font-weight: bold;
+            border-radius: 30px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 6px rgba(230,0,18,0.3); 
+            transition: 0.2s; 
+            width: 80%;
+            max-width: 300px;
+        }
+        .gacha-btn:active { 
+            transform: translateY(3px); 
+            box-shadow: 0 1px 2px rgba(230,0,18,0.3); 
+        }
+        
+        #result { 
+            margin-top: 30px; 
+            text-align: left; 
+        }
+        
+        /* 1つのメニュー行のデザイン */
+        .item { 
+            display: flex; 
+            align-items: center; 
+            border-bottom: 1px dashed #ccc; 
+            padding: 12px 0; 
+        }
+        
+        /* 注文番号 */
+        .item-id {
+            background-color: #fff200; 
+            color: #e60012; 
+            border: 1px solid #ccc;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-right: 10px;
+            min-width: 35px;
+            text-align: center;
+            flex-shrink: 0; 
+        }
+
+        /* メニュー名 */
+        .item-name {
+            flex-grow: 1;
+            font-weight: bold;
+            font-size: 15px;
+            white-space: nowrap; 
+            overflow: hidden; 
+            margin-right: 5px;
+        }
+
+        /* 更新ボタン用のテキスト */
+        .swap-text {
+            font-size: 10px;
+            color: #e60012;
+            margin-right: 2px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        /* 更新ボタン (2419/2417用) */
+        .swap-btn {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 8px;
+            padding: 2px 4px;
+            flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+        .swap-btn:hover { background-color: #e0e0e0; }
+        .swap-btn:active { background-color: #d0d0d0; transform: scale(0.95); }
+
+        /* 栄養素（カロリー・塩分） */
+        .item-nut {
+            font-size: 12px;
+            color: #666;
+            margin-right: 15px;
+            text-align: right;
+            white-space: nowrap;
+            flex-shrink: 0; 
+        }
+
+        /* 値段 */
+        .item-price {
+            font-size: 16px;
+            min-width: 50px;
+            text-align: right;
+            font-weight: bold;
+            flex-shrink: 0; 
+        }
+
+        .total-box { 
+            font-size: 24px; 
+            font-weight: bold; 
+            margin-top: 25px; 
+            padding-top: 15px;
+            border-top: 3px double #e60012;
+            color: #e60012; 
+            text-align: right;
+        }
+
+        .total-nut {
+            font-size: 14px;
+            color: #555;
+            font-weight: normal;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>サイゼリヤガチャ<br>~2026.08現在~</h1>
+        <p>設定した金額以内でランダムにメニューを選びます</p>
+        
+        <div class="input-area">
+            <!-- step="10" を追加し、10円単位で動くようにしました -->
+            予算: <input type="number" id="targetAmount" value="1000" step="10"> 円
+        </div>
+
+        <div class="category-area">
+            <label><input type="checkbox" class="category-cb" value="サラダ" checked> サラダ</label>
+            <label><input type="checkbox" class="category-cb" value="スープ" checked> スープ</label>
+            <label><input type="checkbox" class="category-cb" value="前菜・おつまみ" checked> 前菜・おつまみ</label>
+            <label><input type="checkbox" class="category-cb" value="ドリア・グラタン" checked> ドリア・グラタン</label>
+            <label><input type="checkbox" class="category-cb" value="ピザ" checked> ピザ</label>
+            <label><input type="checkbox" class="category-cb" value="パスタ" checked> パスタ</label>
+            <label><input type="checkbox" class="category-cb" value="肉料理" checked> 肉料理</label>
+            <label><input type="checkbox" class="category-cb" value="パン・ライス" checked> パン・ライス</label>
+            <label><input type="checkbox" class="category-cb" value="ランチ"> ランチ（平日15時まで）</label>
+            <label><input type="checkbox" class="category-cb" value="デザート" checked> デザート</label>
+            <label><input type="checkbox" class="category-cb" value="ドリンク" checked> ドリンク</label>
+            <label><input type="checkbox" class="category-cb" value="アルコール"> アルコール</label>
+            <label><input type="checkbox" class="category-cb" value="アルコール (ボトル)"> アルコール (ボトル)</label>
+            <label><input type="checkbox" class="category-cb" value="トッピング"> トッピング</label>
+            <label><input type="checkbox" class="category-cb" value="テイクアウト"> テイクアウト</label>
+        </div>
+
+        <button class="gacha-btn" onclick="runGacha()">ガチャを回す！</button>
+        
+        <div id="result">
+            <p style="text-align: center; color: #666;">ボタンを押すと、ここに結果が表示されます。</p>
+        </div>
+    </div>
+
+    <script>
+        const menu = [
+            // ランチ
+            { id: "1116", name: "ランチ パルマ風スパゲッティ サラダ付き", price: 500, category: "ランチ", cal: 677, salt: 3.3 },
+            { id: "1120", name: "ランチ ミートソースボロニア風 サラダ付き", price: 500, category: "ランチ", cal: 539, salt: 2.7 },
+            { id: "1135", name: "ランチ タラコソースシシリー風 サラダ付き", price: 500, category: "ランチ", cal: 495, salt: 1.9 },
+            { id: "1140", name: "ランチ ディアボラ風ハンバーグ ライス通常サイズ", price: 600, category: "ランチ", cal: 907, salt: 2.9 },
+            { id: "1141", name: "ランチ ディアボラ風ハンバーグ ライス大盛", price: 650, category: "ランチ", cal: 1058, salt: 2.95 },
+            { id: "1142", name: "ランチ ディアボラ風ハンバーグ ライス小盛", price: 550, category: "ランチ", cal: 755, salt: 2.85 },
+            { id: "1145", name: "ランチ ディアボラ風ハンバーグ ライスをフォッカチオ変更", price: 600, category: "ランチ", cal: 845, salt: 3.4 },
+            { id: "1170", name: "ランチ オニオンソースハンバーグ ライス通常サイズ", price: 600, category: "ランチ", cal: 796, salt: 2.5 },
+            { id: "1171", name: "ランチ オニオンソースハンバーグ ライス大盛", price: 650, category: "ランチ", cal: 947, salt: 2.55 },
+            { id: "1172", name: "ランチ オニオンソースハンバーグ ライス小盛", price: 550, category: "ランチ", cal: 644, salt: 2.45 },
+            { id: "1175", name: "ランチ オニオンソースハンバーグ ライスをフォッカチオ変更", price: 600, category: "ランチ", cal: 734, salt: 3.0 },
+
+            // サラダ
+            { id: "1202", name: "小エビのサラダ", price: 350, category: "サラダ", cal: 197, salt: 1.5 },
+            { id: "1205", name: "わかめのサラダ", price: 350, category: "サラダ", cal: 169, salt: 0.9 },
+            { id: "1209", name: "チキンのサラダ", price: 350, category: "サラダ", cal: 235, salt: 1.5 },
+
+            // スープ
+            { id: "1301", name: "コーンクリームスープ", price: 150, category: "スープ", cal: 150, salt: 1.0 },
+            { id: "1302", name: "冷たいパンプキンスープ", price: 180, category: "スープ", cal: 111, salt: 0.9 },
+            { id: "1305", name: "田舎風ミネストローネ", price: 300, category: "スープ", cal: 179, salt: 2.3 },
+            { id: "1307", name: "たまねぎのズッパ", price: 300, category: "スープ", cal: 270, salt: 2.7 },
+
+            // 前菜・おつまみ
+            { id: "1401", name: "辛味チキン", price: 300, category: "前菜・おつまみ", cal: 295, salt: 1.8 },
+            { id: "1402", name: "アロスティチーニ", price: 400, category: "前菜・おつまみ", cal: 188, salt: 0.7 },
+            { id: "1403", name: "ほうれん草のソテー", price: 200, category: "前菜・おつまみ", cal: 223, salt: 1.3 },
+            { id: "1404", name: "ポップコーンシュリンプ", price: 300, category: "前菜・おつまみ", cal: 234, salt: 1.2 },
+            { id: "1405", name: "エスカルゴのオーブン焼き", price: 400, category: "前菜・おつまみ", cal: 220, salt: 1.4 },
+            { id: "1406", name: "小エビのカクテル", price: 280, category: "前菜・おつまみ", cal: 124, salt: 1.3 },
+            { id: "1407", name: "チョリソー", price: 400, category: "前菜・おつまみ", cal: 382, salt: 2.3 },
+            { id: "1408", name: "蒸し鶏の香味ソース", price: 280, category: "前菜・おつまみ", cal: 128, salt: 1.3 },
+            { id: "1410", name: "ムール貝のガーリック焼き", price: 400, category: "前菜・おつまみ", cal: 339, salt: 1.8 },
+            { id: "1413", name: "キャロットラペ", price: 200, category: "前菜・おつまみ", cal: 92, salt: 0.7 },
+            { id: "1416", name: "ポテトのグリル", price: 300, category: "前菜・おつまみ", cal: 307, salt: 1.6 },
+            { id: "1417", name: "バッファローモッツァレラのカプレーゼ", price: 430, category: "前菜・おつまみ", cal: 254, salt: 0.4 },
+            { id: "1422", name: "生ハム", price: 320, category: "前菜・おつまみ", cal: 36, salt: 0.9 },
+            { id: "1423", name: "生ハムとバッファローモッツァレラの盛合せ", price: 500, category: "前菜・おつまみ", cal: 146, salt: 1.0 },
+            { id: "1425", name: "柔らか青豆の温サラダ", price: 200, category: "前菜・おつまみ", cal: 214, salt: 0.9 },
+            { id: "1452", name: "アロスティチーニ Wサイズ", price: 800, category: "前菜・おつまみ", cal: 376, salt: 1.4 },
+
+            // ドリア・グラタン
+            { id: "2101", name: "ミラノ風ドリア", price: 300, category: "ドリア・グラタン", cal: 549, salt: 2.7 },
+            { id: "2103", name: "半熟卵のミラノ風ドリア", price: 350, category: "ドリア・グラタン", cal: 604, salt: 2.8 },
+            { id: "2108", name: "焼きチーズ ミラノ風ドリア", price: 350, category: "ドリア・グラタン", cal: 666, salt: 3.4 },
+            { id: "2110", name: "タラコとポップコーンシュリンプのドリア", price: 400, category: "ドリア・グラタン", cal: 615, salt: 2.7 },
+            { id: "2115", name: "ポップコーンシュリンプとタラコのクリームグラタン", price: 430, category: "ドリア・グラタン", cal: 600, salt: 2.3 },
+
+            // ピザ
+            { id: "2203", name: "バッファローモッツァレラのマルゲリータピザ", price: 400, category: "ピザ", cal: 536, salt: 2.3 },
+            { id: "2204", name: "野菜ときのこのピザ", price: 400, category: "ピザ", cal: 577, salt: 2.8 },
+            { id: "2206", name: "たっぷりコーンのピザ", price: 400, category: "ピザ", cal: 592, salt: 2.2 },
+            { id: "2208", name: "ソーセージピザ", price: 400, category: "ピザ", cal: 640, salt: 3.8 },
+
+            // パスタ
+            { id: "2301", name: "タラコソースシシリー風", price: 400, category: "パスタ", cal: 495, salt: 1.9 },
+            { id: "2303", name: "ペペロンチーノ", price: 300, category: "パスタ", cal: 542, salt: 2.3 },
+            { id: "2304", name: "パルマ風スパゲッティ", price: 400, category: "パスタ", cal: 677, salt: 3.3 },
+            { id: "2305", name: "カルボナーラ", price: 500, category: "パスタ", cal: 811, salt: 3.4 },
+            { id: "2306", name: "ミートソースボロニア風", price: 400, category: "パスタ", cal: 539, salt: 2.7 },
+            { id: "2310", name: "スープ入り塩味ボンゴレ", price: 500, category: "パスタ", cal: 649, salt: 2.7 },
+            { id: "2316", name: "半熟卵のミートソースボロニア風", price: 450, category: "パスタ", cal: 623, salt: 2.9 },
+            { id: "2317", name: "半熟卵のペペロンチーノ", price: 350, category: "パスタ", cal: 625, salt: 2.5 },
+            { id: "2318", name: "半熟卵のカルボナーラ", price: 550, category: "パスタ", cal: 825, salt: 3.3 },
+            { id: "2320", name: "小エビのタラコソース", price: 540, category: "パスタ", cal: 528, salt: 2.5 },
+            { id: "2321", name: "きのことほうれん草のクリームスパゲッティ", price: 600, category: "パスタ", cal: 713, salt: 2.5 },
+            { id: "2325", name: "ペンネアラビアータ", price: 430, category: "パスタ", cal: 420, salt: 2.6 },
+            { id: "2328", name: "イカの墨入りセピアソース", price: 500, category: "パスタ", cal: 609, salt: 2.4 },
+
+            // 肉料理
+            // メニュー名から注釈を外してスッキリさせました
+            { id: "2402", name: "若鶏のディアボラ風", price: 500, category: "肉料理", cal: 765, salt: 2.7 },
+            { id: "2403", name: "イタリアンハンバーグ", price: 500, category: "肉料理", cal: 632, salt: 3.0 },
+            { id: "2404", name: "柔らかチキンのチーズ焼き", price: 500, category: "肉料理", cal: 810, salt: 3.1 },
+            { id: "2406", name: "ハンバーグステーキ", price: 400, category: "肉料理", cal: 540, salt: 2.7 },
+            { id: "2407", name: "ディアボラ風ハンバーグ", price: 500, category: "肉料理", cal: 654, salt: 3.0 },
+            { id: "2417", name: "ラム(仔羊)のランプステーキ", price: 1090, category: "肉料理", cal: 357, salt: 2.2 },
+            { id: "2419", name: "ビーフステーキ", price: 1090, category: "肉料理", cal: 419, salt: 2.5 },
+
+            // パン・ライス
+            { id: "3101", name: "ライス", price: 150, category: "パン・ライス", cal: 303, salt: 0.1 },
+            { id: "3102", name: "ラージライス", price: 200, category: "パン・ライス", cal: 454, salt: 0.15 },
+            { id: "3103", name: "スモールライス", price: 100, category: "パン・ライス", cal: 151, salt: 0.05 },
+            { id: "3110", name: "フォッカチオ", price: 150, category: "パン・ライス", cal: 241, salt: 0.6 },
+            { id: "3111", name: "ガーリックフォッカチオ", price: 200, category: "パン・ライス", cal: 297, salt: 0.8 },
+            { id: "3112", name: "シナモンフォッカチオ", price: 200, category: "パン・ライス", cal: 273, salt: 0.6 },
+            { id: "3113", name: "タラコフォッカチオ", price: 250, category: "パン・ライス", cal: 322, salt: 1.2 },
+            { id: "3114", name: "チーズフォッカチオ", price: 250, category: "パン・ライス", cal: 317, salt: 1.1 },
+
+            // デザート
+            { id: "3201 3901", name: "ティラミス クラシコ", price: 300, category: "デザート", cal: 229, salt: 0.1 },
+            { id: "3205, 3905", name: "ミルクジェラート", price: 250, category: "デザート", cal: 121, salt: 0.1 },
+            { id: "3206, 3906", name: "イタリアンプリン", price: 250, category: "デザート", cal: 223, salt: 0.2 },
+            { id: "3207, 3907", name: "チョコレートケーキ", price: 300, category: "デザート", cal: 179, salt: 0.2 },
+            { id: "3212, 3912", name: "プリンとティラミス クラシコの盛合せ", price: 500, category: "デザート", cal: 452, salt: 0.3 },
+            { id: "3213, 3913", name: "トリフアイスクリーム", price: 350, category: "デザート", cal: 171, salt: 0.1 },
+            { id: "3214, 3914", name: "ジェラート&シナモンフォッカチオ", price: 450, category: "デザート", cal: 393, salt: 0.7 },
+            { id: "3215, 3915", name: "コーヒーゼリー＆イタリアンジェラート", price: 350, category: "デザート", cal: 173, salt: 0.1 },
+            { id: "3216, 3916", name: "チョコレートケーキ&ミルクジェラート", price: 500, category: "デザート", cal: 299, salt: 0.3 },
+
+            // アルコール (成分表記載外のものは0として扱う)
+            { id: "3301", name: "キリン一番搾り ジョッキ", price: 400, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3302", name: "キリン一番搾り グラス", price: 280, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3303", name: "アサヒドライゼロ", price: 250, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3304", name: "キリン氷結 シチリア産レモン", price: 350, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3306", name: "グラッパ", price: 300, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3401", name: "グラスワイン(赤)", price: 100, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3402", name: "グラスワイン(白)", price: 100, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3403", name: "デカンタ小250ml(赤)", price: 200, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3404", name: "デカンタ小250ml(白)", price: 200, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3405", name: "デカンタ大500ml(赤)", price: 400, category: "アルコール", cal: 0, salt: 0 },
+            { id: "3406", name: "デカンタ大500ml(白)", price: 400, category: "アルコール", cal: 0, salt: 0 },
+
+            // アルコール (ボトル)
+            { id: "3407", name: "マグナム1500ml(赤)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3408", name: "マグナム1500ml(白)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3412", name: "ランブルスコロゼ甘口(微発泡ロゼ)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3413", name: "ドンラファエロ辛口(発泡白)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3414", name: "ランブルスコセッコ辛口(微発泡赤)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3415", name: "ベルデッキオ辛口(白ワイン)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3416", name: "キャンティ辛口(赤ワイン)", price: 1100, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+            { id: "3419", name: "キャンティ ルフィナ辛口フルボディ(赤ワイン)", price: 2200, category: "アルコール (ボトル)", cal: 0, salt: 0 },
+
+            // トッピング
+            { id: "4301", name: "トッピング半熟卵", price: 50, category: "トッピング", cal: 83, salt: 0.2 },
+            { id: "4304", name: "トッピング野菜ソース", price: 100, category: "トッピング", cal: 132, salt: 0.5 },
+            { id: "4307", name: "トッピング粉チーズ", price: 100, category: "トッピング", cal: 90, salt: 0.7 },
+
+            // ドリンク
+            { id: "5101", name: "セットドリンクバー", price: 200, category: "ドリンク", cal: 0, salt: 0 },
+
+            // テイクアウト
+            { id: "5305", name: "テイクアウト サイゼリヤドレッシング(500ml)", price: 500, category: "テイクアウト", cal: 2430, salt: 11.9 },
+            { id: "5306", name: "テイクアウト エクストラ・バージン・オリーブオイル(500ml)", price: 1200, category: "テイクアウト", cal: 4050, salt: 0 }
+        ];
+
+        // 状態を保持するためのグローバル変数
+        let globalSelectedItems = [];
+        let globalTotalPrice = 0;
+        let globalTargetAmount = 0;
+
+        function runGacha() {
+            const amountInput = document.getElementById('targetAmount');
+            let targetAmount = parseInt(amountInput.value, 10);
+
+            if (isNaN(targetAmount) || targetAmount < 0) {
+                alert("正しい金額（0円以上）を入力してください！");
+                return;
+            }
+
+            const checkedBoxes = document.querySelectorAll('.category-cb:checked');
+            const selectedCategories = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (selectedCategories.length === 0) {
+                alert("カテゴリーを1つ以上選択してください！");
+                return;
+            }
+
+            let remainingAmount = targetAmount;
+            let selectedItems = [];
+
+            // ★ ここで「2417(ラムのランプステーキ)」をガチャの抽選から除外する
+            const filteredMenu = menu.filter(item => 
+                selectedCategories.includes(item.category) && item.id !== "2417"
+            );
+
+            while (true) {
+                const affordableItems = filteredMenu.filter(item => item.price <= remainingAmount);
+                if (affordableItems.length === 0) break;
+
+                const randomIndex = Math.floor(Math.random() * affordableItems.length);
+                const selectedItem = affordableItems[randomIndex];
+
+                selectedItems.push(selectedItem);
+                remainingAmount -= selectedItem.price;
+            }
+
+            // IDの先頭4文字を基準にして昇順に並び替える
+            selectedItems.sort((a, b) => {
+                const idA = a.id.slice(0, 4);
+                const idB = b.id.slice(0, 4);
+                return idA.localeCompare(idB);
+            });
+
+            // グローバル変数に保存（ボタンを押した時の再描画用）
+            globalSelectedItems = selectedItems;
+            globalTotalPrice = targetAmount - remainingAmount;
+            globalTargetAmount = targetAmount;
+
+            displayResult();
+        }
+
+        // ★ メニューを入れ替える関数
+        function swapItem(index) {
+            const currentItem = globalSelectedItems[index];
+            
+            if (currentItem.id === "2419") {
+                // ビーフステーキならラムに変更
+                globalSelectedItems[index] = menu.find(m => m.id === "2417");
+            } else if (currentItem.id === "2417") {
+                // ラムならビーフステーキに変更
+                globalSelectedItems[index] = menu.find(m => m.id === "2419");
+            }
+            
+            // 入れ替えた後に再描画
+            displayResult();
+        }
+
+        function displayResult() {
+            const resultDiv = document.getElementById('result');
+            
+            let html = `<h3 style='margin-bottom: 10px; color: #006837;'>予算 ${globalTargetAmount}円 の結果</h3>`;
+            let totalCal = 0;
+            let totalSalt = 0;
+            
+            if (globalSelectedItems.length === 0) {
+                html += `<p>設定金額内で選べるメニューがありませんでした。</p>`;
+            } else {
+                globalSelectedItems.forEach((item, index) => {
+                    totalCal += item.cal || 0;
+                    totalSalt += item.salt || 0;
+
+                    const nutText = (item.cal > 0 || item.salt > 0) 
+                        ? `${item.cal}kcal / ${item.salt.toFixed(1)}g` 
+                        : `- kcal / - g`;
+
+                    // 2419 または 2417 の場合のみ更新ボタンを追加
+                    // 文字の大きさが他の要素に影響されないよう、独立した<span>に分離しました
+                    let swapBtnHtml = "";
+                    if (item.id === "2419" || item.id === "2417") {
+                        swapBtnHtml = `<span class="swap-text">※メニューがない場合は更新→</span><button class="swap-btn" onclick="swapItem(${index})" title="別のお肉に変更">🔄</button>`;
+                    }
+
+                    html += `
+                        <div class="item">
+                            <span class="item-id">${item.id}</span>
+                            <span class="item-name">${item.name}</span>
+                            ${swapBtnHtml}
+                            <span class="item-nut">${nutText}</span>
+                            <span class="item-price">${item.price}円</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `<div class="total-box">
+                        <div class="total-nut">総カロリー: ${totalCal} kcal / 総塩分: ${totalSalt.toFixed(1)} g</div>
+                        合計: ${globalTotalPrice}円
+                     </div>`;
+            
+            resultDiv.innerHTML = html;
+            
+            // HTMLを描画した直後にフォントサイズ調整関数を呼び出す
+            adjustFontSize();
+        }
+
+        // --- 文字サイズを自動で縮小する関数 ---
+        function adjustFontSize() {
+            const itemNames = document.querySelectorAll('.item-name');
+            
+            itemNames.forEach(el => {
+                let fontSize = 15; // デフォルトのフォントサイズ
+                el.style.fontSize = fontSize + 'px';
+                
+                // 要素の実際の幅(scrollWidth)が表示領域(clientWidth)を超える場合、文字を少しずつ小さくする
+                while (el.scrollWidth > el.clientWidth && fontSize > 9) { 
+                    fontSize -= 0.5;
+                    el.style.fontSize = fontSize + 'px';
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
