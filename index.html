@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- スマホでの意図しない拡大を防止 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>サイゼリヤガチャ</title>
     <style>
@@ -10,7 +9,7 @@
         body { 
             font-family: 'Helvetica Neue', Arial, sans-serif; 
             text-align: center; 
-            background-color: #006837; /* サイゼリヤ風グリーン */
+            background-color: #006837; 
             color: #333; 
             padding: 20px; 
             margin: 0;
@@ -97,23 +96,24 @@
         /* 1つのメニュー行のデザイン（全体を縦並びに） */
         .item { 
             display: flex; 
-            flex-direction: column; /* 縦方向に並べる */
+            flex-direction: column; 
             border-bottom: 1px dashed #ccc; 
             padding: 12px 0; 
-            gap: 6px; /* 行間のすき間 */
+            gap: 6px; 
         }
         
-        /* 上段：IDと栄養素の行 */
+        /* 上段：IDと栄養素と更新ボタンの行 */
         .item-info {
             display: flex;
             align-items: center;
             gap: 10px;
+            width: 100%; /* 横幅いっぱいにする */
         }
 
         /* 下段：メニュー名と値段の行 */
         .item-main {
             display: flex;
-            justify-content: space-between; /* 左右に振り分ける */
+            justify-content: space-between; 
             align-items: flex-start;
         }
 
@@ -141,7 +141,7 @@
             font-weight: bold;
             font-size: 15px;
             line-height: 1.4;
-            white-space: normal; /* スマホで文字が長い場合は折り返す */
+            white-space: normal; 
             padding-right: 10px;
         }
 
@@ -156,8 +156,9 @@
 
         /* 更新ボタンのエリア */
         .swap-area {
-            text-align: right;
-            margin-top: 2px;
+            margin-left: auto; /* 右端にピタッと寄せる */
+            display: flex;
+            align-items: center;
         }
 
         /* 更新ボタン用のテキスト */
@@ -472,17 +473,18 @@
                         `;
                     }
 
+                    // ★ HTMLの組み立て部分：item-info の中に swapBtnHtml を移動しました
                     html += `
                         <div class="item">
                             <div class="item-info">
                                 <span class="item-id">${item.id}</span>
                                 <span class="item-nut">${nutText}</span>
+                                ${swapBtnHtml}
                             </div>
                             <div class="item-main">
                                 <span class="item-name">${item.name}</span>
                                 <span class="item-price">${item.price}円</span>
                             </div>
-                            ${swapBtnHtml}
                         </div>
                     `;
                 });
